@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -65,12 +66,12 @@ func parseGhPost(rw http.ResponseWriter, request *http.Request) {
             fmt.Println(string(newt))*/
 	    //Creating Endpoint labels
 	    	var RequestEndpoint string
-		LeadassistRe := regexp.MustCompile(con.Regex)
+		Regexp := regexp.MustCompile(con.Regex)
 		if(string(t.RequestFull)==""){
 			//Request field empty
 		}else
 		{
-			RequestEndpoint = LeadassistRe.FindString(string(t.RequestFull))
+			RequestEndpoint = Regexp.FindString(string(t.RequestFull))
 		}
 		RequestEndpoint = strings.Replace(RequestEndpoint, " ", "_", -1)
 
