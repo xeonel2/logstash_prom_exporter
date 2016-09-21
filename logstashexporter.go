@@ -15,11 +15,13 @@ import (
 	"log"
 )
 
+//Structure of config file
 type conf struct {
 	Regex string `yaml:"regex"`
 	Metrics []Metric `yaml:"metrics"`
 }
 
+//Structure of a metric in config
 type Metric struct{
 	KeyName string `yaml:"keyname"`
 	MetricType string `yaml:"metrictype"`
@@ -30,6 +32,7 @@ type Metric struct{
 
 type MapStringInterface map[string]interface{}
 
+//Function to get configuration from yaml
 func (c *conf) getConf() *conf {
 	yamlFile, err := ioutil.ReadFile("logex.yml")
 	if err != nil {
@@ -46,6 +49,7 @@ func (c *conf) getConf() *conf {
 func parseGhPost(rw http.ResponseWriter, request *http.Request) {
 	//A temporary map to store the values for each label
 	var labelvaluemap = make(map[string] string)
+	//Decode the log message from JSON
 	var mapstringinterface MapStringInterface
 	decoder := json.NewDecoder(request.Body)
 	err := decoder.Decode(&mapstringinterface)
@@ -60,18 +64,12 @@ func parseGhPost(rw http.ResponseWriter, request *http.Request) {
 			if _, ok := value.([]interface{}); ok {
 				//Array of interfaces
 			}else{
-				//Some Label value ... Need to add necessary stuff
-
-					//fmt.Printf("Not a []interafce{} : %+v", value)
-					//fmt.Print("::", reflect.TypeOf(value))
-
-					labelvaluemap[label.(string)] = value.(string)
-					fmt.Println(labelvaluemap[label.(string)])
-
-
-
+				//Adding label to the label-value map for this log entry
+				labelvaluemap[label.(string)] = value.(string)
+				fmt.Println(labelvaluemap[label.(string)])
 			}
 		}else if value, ok := mapstringinterface["request"]; ok {
+			//Find out the API endpoint hit using the regex mentioned in "logex.yml"
 			var RequestEndpoint string
 			Regexp := regexp.MustCompile(con.Regex)
 			if(string(value.(string))==""){
@@ -86,7 +84,6 @@ func parseGhPost(rw http.ResponseWriter, request *http.Request) {
 		}else{
 				//Label not present
 		}
-
 	}
 
 	if value, ok := mapstringinterface["log_message"]; ok {
@@ -95,7 +92,6 @@ func parseGhPost(rw http.ResponseWriter, request *http.Request) {
 			//Array of interfaces
 			for _, message := range element {
 				if blahMap, ok := message.(map[string]interface{}); ok {
-					//fmt.Printf("\n%+v has value %+v\n", blahMap["key"], blahMap["value"])
 					var templabelarray []string
 					for _, lname:= range LabelsMap[blahMap["key"].(string)]{
 						templabelarray = append(templabelarray,labelvaluemap[lname])
@@ -110,27 +106,33 @@ func parseGhPost(rw http.ResponseWriter, request *http.Request) {
 					GaugeMap[blahMap["key"].(string)].WithLabelValues(templabelarray...).Set(setvalue)
 				}
 				}else {
-					fmt.Printf("Not a map[string]interface{}\n%+v\n", message)
+					fmt.Println("\nNot recognized as a monitoring message")
 				}
 			}
 		}
 	}
 }
 
+//Configuration object
 var con *conf
+//A map of Prometheus counters
 var CounterMap = make(map[string] *prometheus.CounterVec)
+//A map of Prometheus Gauges
 var GaugeMap = make(map[string] *prometheus.GaugeVec)
+//A map to store the labels each metric is associated with
 var LabelsMap = make(map[string] []string)
+//A string slice of all the keys names
 var KeyNames []string
+//A set to store all the labels that are there in the config
 var AllLabels = mapset.NewSet()
 
 func main() {
+	//Get configuration
 	con = new(conf)
 	con.getConf()
 
 	fmt.Println("Registering Prometheus Metrics...")
-	//fmt.Printf("%+v", con)
-
+	//Traverse through metrics in "logex.yml" and Create Prometheus Counters and Gauges respectively
 	for _,element := range con.Metrics {
 		if (element.MetricType=="counter"){
 			CounterMap[element.KeyName] = prometheus.NewCounterVec(prometheus.CounterOpts{Name : element.MetricName,Help: element.Help}, element.Labels)
@@ -158,7 +160,7 @@ func main() {
 	}
 
 	fmt.Println("Metrics successfully registered!")
-	fmt.Println("Starting Http server...")
+	fmt.Println("Starting Http server and listening on port 8000...")
 	http.HandleFunc("/post", parseGhPost)
 	http.Handle("/metrics", promhttp.Handler())
 	if err := http.ListenAndServe("0.0.0.0:8000", nil); err != nil {
