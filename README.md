@@ -47,6 +47,8 @@ A tool to export custom metrics from logs in Logstash to Prometheus.
         curl localhost:8000/metrics
     
     - Specify the regex for the http endpoint if you want to track HTTP metrics on prometheus in logex.yml
+    - Also specify the metrics you want to export to prometheus in logex.yml
+    - Have a look at example.logex.yml for a sample config
     
  
      
