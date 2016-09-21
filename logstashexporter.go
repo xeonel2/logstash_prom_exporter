@@ -60,13 +60,11 @@ func parseGhPost(rw http.ResponseWriter, request *http.Request) {
 	//Iterate through all labels and check if it is present in the log entry
 	for _, label := range AllLabels.ToSlice() {
 		if value, ok := mapstringinterface[label.(string)]; ok {
-			fmt.Printf("\nLabel present : %+v", label)
 			if _, ok := value.([]interface{}); ok {
 				//Array of interfaces
 			}else{
 				//Adding label to the label-value map for this log entry
 				labelvaluemap[label.(string)] = value.(string)
-				fmt.Println(labelvaluemap[label.(string)])
 			}
 		}else if value, ok := mapstringinterface["request"]; ok {
 			//Find out the API endpoint hit using the regex mentioned in "logex.yml"
@@ -87,7 +85,6 @@ func parseGhPost(rw http.ResponseWriter, request *http.Request) {
 	}
 
 	if value, ok := mapstringinterface["log_message"]; ok {
-		fmt.Println("\nLabel present : log_message")
 		if element, ok := value.([]interface{}); ok {
 			//Array of interfaces
 			for _, message := range element {
