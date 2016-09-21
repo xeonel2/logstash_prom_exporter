@@ -1,1 +1,17 @@
-regex : "((GET|POST) /v1/a/b)"
+regex : "((GET|POST|DELETE) /endpoint/[a-zA-Z0-9]+/(a|b))"
+metrics:
+        - keyname: request_time
+          metricname: logstash_request_time
+          metrictype: gauge
+          help: "Nginx request time."
+          labels: ["process_name", "host_name", "thread_id", "request_endpoint"]
+        - keyname: upstream_response_time
+          metricname: logstash_upstream_response_time
+          metrictype: gauge
+          help: "Nginx Upstream response time."
+          labels: ["process_name", "host_name", "thread_id", "request_endpoint"]
+        - keyname: request_count
+          metricname: logstash_request_count
+          metrictype: counter
+          help: "Number of Requests."
+          labels: ["process_name", "host_name", "thread_id", "request_endpoint"]
