@@ -28,7 +28,7 @@ A tool to export custom metrics from logs in Logstash to Prometheus.
         	   }
         }
         
-      But make sure you're getting it in a jason format!
+      But make sure you're getting it in a json format!
       
     - A log message should contain an element called log_message, which is an array of key value pairs.
     
